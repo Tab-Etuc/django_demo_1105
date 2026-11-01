@@ -7,9 +7,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { createRoot } from "react-dom/client";
-import { AnimatePresence, motion, MotionConfig } from "motion/react";
-import { ReducedMotionConfig } from "@animate-ui/react/utils/motion";
+import { AnimatePresence, motion } from "motion/react";
 import { Timetable } from "@/components/Timetable";
 import { CourseDrawer } from "@/components/CourseDrawer";
 import { PlanTerm } from "@/components/PlanTerm";
@@ -52,14 +50,6 @@ import {
   UserRound,
   X,
 } from "lucide-react";
-import "./styles.css";
-import "./plan-map.css";
-import "./login-shape.css";
-import "./switch-class.css";
-import "./readability.css";
-
-const Login = React.lazy(() => import("@/components/Login").then((module) => ({ default: module.Login })));
-
 function App() {
   const [user] = useState(
     document.getElementById("root")?.dataset.user || "同學",
@@ -110,8 +100,10 @@ function App() {
   const [selectedTime, setSelectedTime] = useState(null);
   const mutationRef = useRef(false);
   const detailRequest = useRef(0);
+  const refreshRequest = useRef(0);
 
   const refresh = useCallback(async () => {
+    const requestId = ++refreshRequest.current;
     setLoading(true);
     setLoadError("");
     try {
@@ -120,6 +112,7 @@ function App() {
         request("/api/courses/"),
         request("/api/periods/"),
       ]);
+      if (requestId !== refreshRequest.current) return;
       setProfile(me);
       setCourses(catalog.courses || []);
       setPeriods(periodData.periods || []);
@@ -128,9 +121,9 @@ function App() {
       setPlan(null);
       setPlanImpact(null);
     } catch (error) {
-      setLoadError(error.message);
+      if (requestId === refreshRequest.current) setLoadError(error.message);
     } finally {
-      setLoading(false);
+      if (requestId === refreshRequest.current) setLoading(false);
     }
   }, []);
 
@@ -246,6 +239,7 @@ function App() {
   async function openCourse(item, offering = item.offerings[0]) {
     const requestId = ++detailRequest.current;
     setDrawer({
+      requestId,
       course: item.course,
       offerings: item.offerings,
       active: offering,
@@ -335,6 +329,36 @@ function App() {
       setBusy(false);
     }
   }
+  async function openSwitch(item, initialTargetId) {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const [me, catalog] = await Promise.all([
+        request("/api/me/"),
+        request("/api/courses/"),
+      ]);
+      const record = (me.enrollments || []).find(
+        (row) => row.offering.id === item.offering.id && !row.is_assigned,
+      );
+      const course = (catalog.courses || []).find(
+        (row) => row.course.id === item.course.id,
+      );
+      setProfile(me);
+      setSelected(me.enrollments || []);
+      setCourses(catalog.courses || []);
+      if (!record || !course) throw new Error("課程資料已更新，請重新開啟換班。");
+      setSwitchSource({
+        current: { course: record.course, offering: record.offering },
+        offerings: course.offerings,
+        initialTargetId,
+      });
+    } catch (error) {
+      setNotice({ type: "error", text: error.message });
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function switchOffering(targetId) {
     if (!switchSource || busy) return;
     setBusy(true);
@@ -350,7 +374,7 @@ function App() {
       await refresh();
       setNotice({ type: "success", text: "換班完成，課表已更新。" });
     } catch (error) {
-      setNotice({ type: "error", text: error.message });
+      throw error;
     } finally {
       setBusy(false);
     }
@@ -1007,7 +1031,7 @@ function App() {
                             type="button"
                             title="更換班別"
                             disabled={busy}
-                            onClick={() => setSwitchSource({ current: item })}
+                            onClick={() => openSwitch(item)}
                             aria-label={"更換" + item.course.name + "班別"}
                           >
                             <ArrowLeftRight size={17} />
@@ -1266,13 +1290,14 @@ function App() {
       <AnimatePresence>
         {drawer && (
           <CourseDrawer
+            key={drawer.requestId}
             drawer={drawer}
             setDrawer={setDrawer}
             selectedIds={confirmedIds}
             selectedRecords={selected}
             onSwitch={(record, targetId) => {
               setDrawer(null);
-              setSwitchSource({ current: { course: record.course, offering: record.offering }, initialTargetId: targetId });
+              openSwitch({ course: record.course, offering: record.offering }, targetId);
             }}
             trialIds={trialIds}
             onAdd={addTrial}
@@ -1338,7 +1363,7 @@ function App() {
       {switchSource && (
         <SwitchClassDialog
           current={switchSource.current}
-          offerings={courses.find((course) => course.course.id === switchSource.current.course.id)?.offerings || []}
+          offerings={switchSource.offerings}
           initialTargetId={switchSource.initialTargetId}
           trialCount={trial.length}
           busy={busy}
@@ -1653,18 +1678,4 @@ function DropConfirm({ item, busy, onCancel, onConfirm }) {
   );
 }
 
-createRoot(document.getElementById("root")).render(
-  <MotionConfig reducedMotion="user">
-    <ReducedMotionConfig>
-      <>
-        {document.getElementById("root").dataset.page === "login" ? (
-          <React.Suspense fallback={<main className="login-page" />}>
-            <Login />
-          </React.Suspense>
-        ) : (
-          <App />
-        )}
-      </>
-    </ReducedMotionConfig>
-  </MotionConfig>,
-);
+export default App;

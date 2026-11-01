@@ -161,17 +161,15 @@ def reasons(
     conflicts = collisions(offering, records)
     if conflicts:
         errors.append("與既有課表衝堂。")
+    if completed_ids is None:
+        completed_ids = set(
+            CompletedCourse.objects.filter(student=student).values_list("course_id", flat=True)
+        )
+    if course.pk in completed_ids:
+        errors.append("這門課已修習通過或抵免。")
     required = {link.required_course_id for link in course.prerequisite_links.all()}
-    if required:
-        if completed_ids is None:
-            completed_ids = set(
-                CompletedCourse.objects.filter(
-                    student=student,
-                    course_id__in=required,
-                ).values_list("course_id", flat=True)
-            )
-        if required - completed_ids:
-            errors.append("尚未完成先修課程。")
+    if required - completed_ids:
+        errors.append("尚未完成先修課程。")
     if check_limit and sum(item.offering.course.credits for item in records) + course.credits > 25:
         errors.append("超過每學期 25 學分上限。")
     return errors, conflicts

@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase
 
 from accounts.models import User
+from courses.academic import CompletedCourse
 from courses.models import Course, CourseOffering
 
 from .models import Enrollment
@@ -35,6 +36,13 @@ class EnrollmentValidationTests(TestCase):
     def test_direct_enrollment_checks_role(self):
         with self.assertRaises(ValidationError):
             Enrollment.objects.create(student=self.teacher, offering=self.first)
+
+    def test_direct_enrollment_rejects_completed_course(self):
+        CompletedCourse.objects.create(
+            student=self.student, course=self.first.course, status="credited"
+        )
+        with self.assertRaises(ValidationError):
+            Enrollment.objects.create(student=self.student, offering=self.first)
 
     def test_direct_enrollment_checks_capacity(self):
         Enrollment.objects.create(student=self.student, offering=self.first)

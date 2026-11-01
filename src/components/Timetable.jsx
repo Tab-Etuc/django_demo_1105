@@ -10,6 +10,14 @@ export function Timetable({ enrollments, periods, onDropCourse, onOpen, selected
   const dragRef = useRef(null);
   const times = periods.length ? periods : [];
   const dayCount = Math.max(5, ...(preview ? [...enrollments, preview] : enrollments).flatMap((e) => e.offering.slots.map((s) => s.day + 1)));
+  const outsideGrid = [
+    ...enrollments,
+    ...(preview && !enrollments.some(e => e.offering.id === preview.offering.id) ? [preview] : []),
+  ].flatMap(item =>
+    (item.offering.slots || [])
+      .filter(slot => !periodsFor(slot, times).length)
+      .map(slot => ({ item, slot })),
+  );
 
   function beginSelection(event, day, period) {
     if (event.pointerType === "mouse" && event.button !== 0) return;
@@ -117,7 +125,7 @@ export function Timetable({ enrollments, periods, onDropCourse, onOpen, selected
         {preview && !enrollments.some(e => e.offering.id === preview.offering.id) && preview.offering.slots.map((slot, i) => {
           const numbers = periodsFor(slot, times);
           const first = times.findIndex(p => p.number === numbers[0]);
-          return first < 0 ? null : <div key={`preview-${i}`} className={`timetable-preview-block ${enrollments.some(e => e.offering.id !== preview.offering.id && e.offering.slots.some(s => s.day === slot.day && s.periods?.some(n => numbers.includes(n)))) ? "overlapping-preview" : ""}`} style={{gridColumn: slot.day + 2, gridRow: `${first + 2} / span ${numbers.length}`}}><span>預覽</span><strong>{preview.course.name}</strong></div>;
+          return first < 0 ? null : <div key={`preview-${i}`} className={`timetable-preview-block ${enrollments.some(e => e.offering.id !== preview.offering.id && e.offering.slots.some(s => s.day === slot.day && slot.start < s.end && s.start < slot.end)) ? "overlapping-preview" : ""}`} style={{gridColumn: slot.day + 2, gridRow: `${first + 2} / span ${numbers.length}`}}><span>預覽</span><strong>{preview.course.name}</strong></div>;
         })}
         <AnimatePresence initial={false}>
           {enrollments.flatMap((item) =>
@@ -151,6 +159,19 @@ export function Timetable({ enrollments, periods, onDropCourse, onOpen, selected
           )}
         </AnimatePresence>
       </div>
+      {outsideGrid.length > 0 && (
+        <div className="timetable-outside">
+          <strong>其他上課時段</strong>
+          <div className="timetable-outside-list">
+            {outsideGrid.map(({ item, slot }, index) => (
+              <button key={`${item.offering.id}-${index}`} type="button" onClick={() => onOpen(item)}>
+                <span>{item.course.name}</span>
+                <small>週{DAYS[slot.day]} {slot.start}–{slot.end}</small>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -22,7 +22,7 @@ uv run ruff check .
 uv run ruff format --check .
 uv run python manage.py test
 uv run python manage.py makemigrations --check --dry-run
-node --test src/lib/course-data.test.js
+npm test
 npm run build
 ```
 

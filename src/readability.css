@@ -153,6 +153,11 @@ body { line-height: 1.55; }
 .timetable-preview-block.overlapping-preview { margin-left:48%; background:#edf2ff; font-size:12px; }
 .timetable-block.conflict-highlight { margin-right:50%; padding:4px; }
 .timetable-block.conflict-highlight strong { font-size:12px; }
+.timetable-outside { padding: 12px; border-top: 1px solid var(--line); }
+.timetable-outside > strong { display: block; margin-bottom: 8px; font-size: 13px; color: #42536d; }
+.timetable-outside-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.timetable-outside-list button { display: flex; align-items: center; gap: 10px; min-height: 42px; padding: 8px 12px; border: 1px solid #cbd9f4; border-radius: 7px; background: #f3f6ff; color: #2349ad; text-align: left; }
+.timetable-outside-list small { color: #53647b; }
 @media(max-width:700px) {
   .timetable:has(.overlapping-preview) { min-width:680px; }
   .timetable:has(.overlapping-preview) .timetable-block strong { overflow-wrap:normal; }

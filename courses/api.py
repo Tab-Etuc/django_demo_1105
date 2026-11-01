@@ -2,7 +2,7 @@ import json
 from functools import wraps
 
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db import IntegrityError
+from django.db import IntegrityError, OperationalError
 from django.db.models import Count, Q
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404
@@ -67,6 +67,10 @@ def endpoint(*methods, roles=("student",)):
                 return JsonResponse({"error": "找不到指定資料。"}, status=404)
             except IntegrityError:
                 return JsonResponse({"error": "資料已變更，請重新整理後再試。"}, status=409)
+            except OperationalError as exc:
+                if "locked" not in str(exc).lower() and "busy" not in str(exc).lower():
+                    raise
+                return JsonResponse({"error": "選課資料忙碌，請稍後再試。"}, status=409)
 
         return invoke
 
@@ -75,6 +79,13 @@ def endpoint(*methods, roles=("student",)):
 
 def active_semester(request, value=None):
     return value or request.GET.get("semester") or student_info(request.user)["semester"]
+
+
+def registration_semester(request, value=None):
+    semester = student_info(request.user)["semester"]
+    if value is not None and value != semester:
+        raise ValidationError("只能操作目前學期的選課。")
+    return semester
 
 
 def serialize_course(course):
@@ -455,14 +466,16 @@ def timetable(request, data):
 @endpoint("POST")
 def preview(request, data):
     return review(
-        request.user, active_semester(request, data.get("semester")), data.get("offering_ids", [])
+        request.user,
+        registration_semester(request, data.get("semester")),
+        data.get("offering_ids", []),
     )
 
 
 @endpoint("POST")
 def enroll_api(request, data):
     result = select(
-        request.user, active_semester(request, data.get("semester")), data["offering_ids"]
+        request.user, registration_semester(request, data.get("semester")), data["offering_ids"]
     )
     return {
         "message": "加選成功。",
@@ -473,14 +486,14 @@ def enroll_api(request, data):
 
 @endpoint("POST")
 def drop_api(request, data):
-    semester = active_semester(request, data.get("semester"))
+    semester = registration_semester(request, data.get("semester"))
     credits = drop(request.user, semester, int(data["offering_id"]))
     return {"message": "退選成功。", "credits": credits}
 
 
 @endpoint("POST")
 def switch_api(request, data):
-    semester = active_semester(request, data.get("semester"))
+    semester = registration_semester(request, data.get("semester"))
     result = switch(
         request.user, semester, int(data["from_offering_id"]), int(data["to_offering_id"])
     )

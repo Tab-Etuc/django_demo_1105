@@ -38,7 +38,7 @@ uv run python manage.py check
 uv run python manage.py makemigrations --check --dry-run
 uv run ruff check .
 uv run ruff format --check .
-node --test src/lib/course-data.test.js
+npm test
 npm run build
 ```
 

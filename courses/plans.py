@@ -246,6 +246,8 @@ def validate_retake_term(student, course_id, term):
     )
     if latest and term <= latest.term:
         raise ValidationError("重修須排在最後一次未通過之後；若為誤觸，請使用取消未通過。")
+    if term > 4 and student_info(student)["program_type"] == "two_year" and not latest:
+        raise ValidationError("二技第 5 學期起僅能安排重修課程。")
 
 
 def alter_plan(student, data, operation, entry_id=None):
@@ -315,6 +317,8 @@ def mark_failed(request, data):
     if CompletedCourse.objects.filter(student=request.user, course=course).exists():
         raise ValidationError("已完成的課程無法標記為未通過。")
     current = plan_data(request.user)
+    if term > len(current["terms"]):
+        raise ValidationError("未通過學期超出目前規劃範圍。")
     if not any(
         item["course"]["id"] == course.pk and item["source"] != "failed"
         for item in current["terms"][term - 1]["courses"]

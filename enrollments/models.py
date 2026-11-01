@@ -4,6 +4,7 @@ from django.db import models, transaction
 from django.db.models import F
 from django.utils import timezone
 
+from courses.academic import CompletedCourse
 from courses.models import CourseOffering, overlapping_slots
 
 
@@ -45,6 +46,10 @@ class Enrollment(models.Model):
         if self.status != "enrolled" or not self.student_id or not self.offering_id:
             return
         offering = self.offering
+        if CompletedCourse.objects.filter(
+            student_id=self.student_id, course_id=offering.course_id
+        ).exists():
+            raise ValidationError("這門課已修習通過或抵免。")
         others = Enrollment.objects.filter(
             student_id=self.student_id,
             status="enrolled",

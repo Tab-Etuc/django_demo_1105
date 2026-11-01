@@ -1,10 +1,11 @@
 import json
 from datetime import time
 from io import StringIO
+from unittest.mock import patch
 
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
-from django.db import connection
+from django.db import OperationalError, connection
 from django.db.models import Count
 from django.test import Client, TestCase
 from django.test.utils import CaptureQueriesContext
@@ -424,6 +425,13 @@ class DemoApiTests(TestCase):
         )
         self.assertEqual(result.status_code, 200, result.content)
 
+    def test_sqlite_lock_returns_retryable_error(self):
+        offering = self.get_offering("101")
+        with patch("courses.api.select", side_effect=OperationalError("database table is locked")):
+            response = self.post("/api/enrollments/", {"offering_ids": [offering.pk]})
+        self.assertEqual(response.status_code, 409)
+        self.assertIn("稍後再試", response.json()["error"])
+
     def test_reject_invalid_json_and_body(self):
         self.assertEqual(
             self.client.post(
@@ -436,6 +444,64 @@ class DemoApiTests(TestCase):
         self.assertEqual(self.post("/api/preview/", {"offering_ids": "text"}).status_code, 400)
         self.assertEqual(self.post("/api/preview/", {"offering_ids": [True]}).status_code, 400)
         self.assertEqual(self.post("/api/preview/", {"offering_ids": [999999]}).status_code, 400)
+
+    def test_writing_other_semester_is_forbidden(self):
+        current = self.get_offering("101")
+        future = CourseOffering.objects.create(
+            course=current.course,
+            semester="116-1",
+            day_of_week=6,
+            start_time=time(8, 10),
+            end_time=time(9),
+            room="未來學期教室",
+        )
+        self.assertEqual(self.client.get("/api/timetable/?semester=116-1").status_code, 200)
+        for url, payload in (
+            ("/api/preview/", {"offering_ids": [future.pk]}),
+            ("/api/enrollments/", {"offering_ids": [future.pk]}),
+            ("/api/enrollments/drop/", {"offering_id": current.pk}),
+            (
+                "/api/enrollments/switch/",
+                {"from_offering_id": current.pk, "to_offering_id": future.pk},
+            ),
+        ):
+            response = self.post(url, {"semester": "116-1", **payload})
+            self.assertEqual(response.status_code, 400, (url, response.content))
+        self.assertFalse(Enrollment.objects.filter(student=self.student, offering=future).exists())
+
+    def test_completed_course_is_not_available_for_reenrollment(self):
+        offering = self.get_offering("101")
+        CompletedCourse.objects.create(
+            student=self.student, course=offering.course, status="passed"
+        )
+        preview = self.post("/api/preview/", {"offering_ids": [offering.pk]}).json()
+        self.assertFalse(preview["ok"])
+        self.assertIn("已修習通過", " ".join(preview["errors"][0]["reasons"]))
+        self.assertEqual(
+            self.post("/api/enrollments/", {"offering_ids": [offering.pk]}).status_code, 400
+        )
+        course = self.client.get(f"/api/courses/{offering.course_id}/").json()
+        self.assertTrue(
+            all("已修習通過" in " ".join(row["unavailable_reasons"]) for row in course["offerings"])
+        )
+
+    def test_off_grid_meeting_keeps_its_real_time(self):
+        course = Course.objects.create(code="OFFGRID", name="午間講座", credits=2)
+        offering = CourseOffering.objects.create(
+            course=course,
+            semester="115-1",
+            day_of_week=5,
+            start_time=time(12, 5),
+            end_time=time(12, 55),
+            room="午間教室",
+        )
+        response = self.client.get(f"/api/courses/{course.pk}/")
+        self.assertEqual(response.status_code, 200, response.content)
+        slot = response.json()["offerings"][0]["slots"][0]
+        self.assertEqual((slot["start"], slot["end"], slot["periods"]), ("12:05", "12:55", []))
+        self.assertEqual(
+            self.post("/api/preview/", {"offering_ids": [offering.pk]}).json()["ok"], True
+        )
 
     def test_other_semester_is_not_selected(self):
         current = self.client.get("/api/timetable/?semester=115-2").json()
@@ -792,6 +858,24 @@ class DemoApiTests(TestCase):
         self.assertEqual(len(plan["terms"]), 4)
         self.assertEqual(plan["graduation"]["target"], 72)
         self.assertEqual(plan["graduation"]["professional_target"], 31)
+
+    def test_two_year_rejects_unreachable_failed_term_and_unrelated_fifth_term(self):
+        student = User.objects.get(username="demo_student_two_year")
+        self.client.force_login(student)
+        course = Course.objects.get(code="NTUB-DEMO-501")
+        baseline = self.client.get("/api/plan/").json()
+        self.assertEqual(len(baseline["terms"]), 4)
+        failed = self.post(
+            "/api/plan/failed/",
+            {"course_id": course.pk, "term": 6, "retake_term": 7, "version": 0},
+        )
+        self.assertEqual(failed.status_code, 400, failed.content)
+        added = self.post(
+            "/api/plan/courses/",
+            {"course_id": course.pk, "term": 5, "version": 0},
+        )
+        self.assertEqual(added.status_code, 400, added.content)
+        self.assertFalse(StudyPlan.objects.filter(student=student).exists())
 
     def test_two_year_plan_extends_for_retake_after_fourth_semester(self):
         student = User.objects.get(username="demo_student_two_year")

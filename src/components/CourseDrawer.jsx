@@ -37,7 +37,9 @@ export function CourseDrawer({
   useEffect(() => () => clearTimeout(closeTimer.current), []);
   const close = () => {
     setOpen(false);
-    closeTimer.current = setTimeout(() => setDrawer(null), 220);
+    closeTimer.current = setTimeout(() => {
+      setDrawer((current) => current?.requestId === drawer.requestId ? null : current);
+    }, 220);
   };
   const sections = drawer.detail?.offerings || drawer.offerings;
   const active = sections.find((offering) => offering.id === drawer.active?.id) || sections[0];
