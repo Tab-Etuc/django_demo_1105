@@ -503,6 +503,35 @@ class DemoApiTests(TestCase):
             self.post("/api/preview/", {"offering_ids": [offering.pk]}).json()["ok"], True
         )
 
+    def test_partially_off_grid_course_shows_actual_time(self):
+        course = Course.objects.create(code="OFFGRID-PARTIAL", name="跨午休講座", credits=2)
+        for section, start, end in (
+            ("A", time(12, 5), time(13, 45)),
+            ("B", time(9, 40), time(10, 20)),
+            ("C", time(8, 10), time(9)),
+        ):
+            CourseOffering.objects.create(
+                course=course,
+                semester="115-1",
+                section=section,
+                day_of_week=5,
+                start_time=start,
+                end_time=end,
+                room=f"測試教室{section}",
+            )
+        response = self.client.get(f"/api/courses/{course.pk}/")
+        self.assertEqual(response.status_code, 200, response.content)
+        slots = {item["section"]: item["slots"][0] for item in response.json()["offerings"]}
+        self.assertEqual(
+            (slots["A"]["start"], slots["A"]["end"], slots["A"]["periods"]),
+            ("12:05", "13:45", []),
+        )
+        self.assertEqual(
+            (slots["B"]["start"], slots["B"]["end"], slots["B"]["periods"]),
+            ("09:40", "10:20", []),
+        )
+        self.assertEqual(slots["C"]["periods"], [1])
+
     def test_other_semester_is_not_selected(self):
         current = self.client.get("/api/timetable/?semester=115-2").json()
         self.assertEqual(current["credits"]["confirmed"], 0)

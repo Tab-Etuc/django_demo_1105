@@ -63,6 +63,14 @@ def period_numbers(start, end):
     ]
 
 
+def display_period_numbers(start, end):
+    numbers = period_numbers(start, end)
+    if not numbers:
+        return []
+    first, last = PERIODS[numbers[0] - 1][0], PERIODS[numbers[-1] - 1][1]
+    return numbers if (start, end) == (time.fromisoformat(first), time.fromisoformat(last)) else []
+
+
 def offering_slots(offering):
     return [
         {
@@ -70,7 +78,7 @@ def offering_slots(offering):
             "start": start.strftime("%H:%M"),
             "end": end.strftime("%H:%M"),
             "room": room,
-            "periods": period_numbers(start, end),
+            "periods": display_period_numbers(start, end),
         }
         for day, start, end, room, _ in offering.slots()
     ]
