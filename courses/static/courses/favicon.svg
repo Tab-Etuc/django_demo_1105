@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="大學選課系統">
+  <rect width="64" height="64" rx="16" fill="#23315d"/>
+  <path d="M10 25 32 14 54 25 32 36 10 25Z" fill="#f3f7ff"/>
+  <path d="M20 31v12c7 6 17 6 24 0V31" fill="none" stroke="#9fd5e0" stroke-width="3.7" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M54 26v16" stroke="#9fd5e0" stroke-width="3.5" stroke-linecap="round"/>
+  <circle cx="54" cy="45" r="3.2" fill="#9fd5e0"/>
+</svg>

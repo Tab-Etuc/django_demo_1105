@@ -1,0 +1,21 @@
+.completed-courses { margin-top: 12px; padding: 16px 18px; border: 1px solid #e5eae6; border-radius: 9px; background: #fff; }
+.completed-courses h2 { margin: 0; color: #35483c; font-size: 13px; }
+.completed-courses p { margin: 5px 0 0; color: #8a968e; font-size: 9px; }
+.completed-courses ul { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 16px; margin: 13px 0 0; padding: 0; list-style: none; }
+.completed-courses li { display: grid; grid-template-columns: 18px minmax(0, 1fr); align-items: center; gap: 3px 7px; padding: 8px 0; border-top: 1px solid #edf0ed; }
+.completed-courses li svg { grid-row: span 2; color: #4c8a63; }
+.completed-courses li span { overflow: hidden; color: #506057; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }
+.completed-courses li small { color: #96a098; font-size: 8px; }
+.completed-empty { padding: 12px 0 0; color: #929d95; font-size: 10px; }
+.drop-confirm { width: min(410px, 100%); padding: 23px; border: 1px solid #e6ebe7; border-radius: 12px; background: #fff; box-shadow: 0 18px 60px #10251d40; }
+.drop-confirm-mark { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 8px; color: #99554b; background: #fbefec; }
+.drop-confirm h2 { margin: 15px 0 7px; color: #34473b; font-size: 16px; }
+.drop-confirm p { margin: 0; color: #77847c; font-size: 11px; line-height: 1.7; }
+.drop-confirm-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+.button-danger { min-height: 37px; padding: 0 11px; border: 1px solid #a44b43; border-radius: 7px; background: #a84d43; color: #fff; font-size: 10px; font-weight: 650; }
+.button-danger:hover:not(:disabled) { background: #913d35; }
+.button-danger:disabled { opacity: .6; cursor: wait; }
+@media (max-width: 560px) {
+  .title-context { display: block; margin: 5px 0 0; font-size: 10px; vertical-align: baseline; }
+  .completed-courses ul { grid-template-columns: 1fr; }
+}

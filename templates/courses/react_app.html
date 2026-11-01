@@ -1,0 +1,16 @@
+{% load static %}
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#163f35">
+  <link rel="icon" type="image/svg+xml" href="{% static 'courses/favicon.svg' %}">
+  <title>大學選課系統</title>
+  <link rel="stylesheet" href="{% static 'courses/dist/assets/index.css' %}">
+</head>
+<body>
+  <div id="root" data-user="{{ request.user.get_full_name|default:request.user.username }}"></div>
+  <script type="module" src="{% static 'courses/dist/app.js' %}"></script>
+</body>
+</html>

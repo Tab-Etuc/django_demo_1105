@@ -1,0 +1,17 @@
+{% load static %}
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#315bd5">
+  <link rel="icon" type="image/svg+xml" href="{% static 'courses/favicon.svg' %}">
+  <title>登入｜大學選課系統</title>
+  <link rel="stylesheet" href="{% static 'courses/dist/assets/index.css' %}">
+</head>
+<body>
+  <div id="root" data-page="login" data-csrf="{{ csrf_token }}" data-next="{{ next }}" data-username="{{ form.username.value|default:'' }}" data-error="{% if form.errors %}invalid{% endif %}" data-guest-enabled="{{ guest_enabled|yesno:'true,false' }}"></div>
+  <noscript>請啟用 JavaScript 以使用選課系統。</noscript>
+  <script type="module" src="{% static 'courses/dist/app.js' %}"></script>
+</body>
+</html>

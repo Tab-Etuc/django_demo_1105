@@ -1,0 +1,56 @@
+/* Light login layout with React Bits Shape Grid background. */
+.login-page {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: #f5f8fd;
+  color: #24344f;
+}
+.login-page > .login-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.login-page > :not(.login-backdrop) { position: relative; z-index: 1; }
+.login-brand, .login-brand:visited { color: #244472; }
+.login-brand:hover { color: #17355d; }
+.login-brand small { color: #71809b; }
+.login-symbol { color: #487bb7; }
+.login-intro h1 { color: #1c3151; text-shadow: none; }
+.login-intro p, .login-features { color: #62738d; }
+.login-features svg { color: #537faf; }
+.login-footer { color: #8996a9; }
+.login-form-panel {
+  background: rgba(255, 255, 255, .97);
+  color: #253654;
+  border: 1px solid #dbe5f2;
+  box-shadow: 0 16px 44px rgba(43, 68, 105, .10);
+}
+.login-form-panel h2 { color: #203654; }
+.login-form-panel > p { color: #6e7d97; }
+.login-note { color: #7c8ba2; }
+.guest-link { background: #f4f7fc; }
+@media (max-width: 700px) {
+  .login-intro { max-width: 520px; }
+  .login-form-panel { background: #fff; }
+}
+
+/* Keep the animated grid subordinate to the reading surface. */
+.login-intro { padding: 28px 0; }
+.login-intro h1 { font-size: clamp(32px, 3.6vw, 48px); line-height: 1.5; }
+.login-brand small, .login-footer, .login-note,
+.login-form-panel > p, .guest-entry-copy small { color: #53647d; }
+.login-form-panel { background: #fff; box-shadow: 0 12px 36px #24344f0a; }
+.login-layout { padding: 44px 0; gap: 72px; }
+.login-features { margin-top: 28px; color: #425777; }
+.guest-entry { gap: 12px; flex-wrap: wrap; }
+.guest-entry-copy small { font-size: 13px; }
+.guest-link { min-height: 44px; }
+@media (max-width: 700px) {
+  .login-page { padding: 24px 20px; }
+  .login-layout { padding: 32px 0; gap: 0; }
+  .login-form-panel { padding: 28px 24px; border-radius: 12px; }
+  .login-brand { font-size: 20px; }
+}
