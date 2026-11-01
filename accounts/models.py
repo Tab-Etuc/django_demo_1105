@@ -18,7 +18,7 @@ class User(AbstractUser):
         default="student",
     )
 
-    class Meta:
+    class Meta:  # pyright: ignore[reportIncompatibleVariableOverride]
         verbose_name = "User"
         verbose_name_plural = "Users"
 

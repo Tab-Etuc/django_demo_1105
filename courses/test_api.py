@@ -1000,8 +1000,9 @@ class DemoApiTests(TestCase):
     def test_course_offerings_can_be_single_section_or_unassigned_to_class(self):
         single = CourseOffering.objects.filter(course__code="NTUB-DEMO-302")
         self.assertEqual(single.count(), 1)
-        self.assertEqual(single.first().class_label, "")
-        self.assertEqual(single.first().target_grade, 1)
+        offering = single.get()
+        self.assertEqual(offering.class_label, "")
+        self.assertEqual(offering.target_grade, 1)
         paired = CourseOffering.objects.filter(course__code="NTUB-DEMO-301")
         self.assertEqual(set(paired.values_list("section", flat=True)), {"A", "B"})
         self.assertTrue(all(not item.class_label for item in paired))

@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
@@ -28,6 +30,10 @@ class StudentProfile(models.Model):
 
 
 class CoursePrerequisite(models.Model):
+    if TYPE_CHECKING:
+        course_id: int
+        required_course_id: int
+
     course = models.ForeignKey(
         "courses.Course", on_delete=models.CASCADE, related_name="prerequisite_links"
     )
@@ -47,6 +53,9 @@ class CoursePrerequisite(models.Model):
 
 
 class CompletedCourse(models.Model):
+    if TYPE_CHECKING:
+        course_id: int
+
     student = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="completed_courses"
     )
@@ -65,6 +74,9 @@ class CompletedCourse(models.Model):
 
 
 class FailedCourseAttempt(models.Model):
+    if TYPE_CHECKING:
+        course_id: int
+
     student = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="failed_attempts"
     )
@@ -83,6 +95,11 @@ class FailedCourseAttempt(models.Model):
 
 
 class StudyPlan(models.Model):
+    if TYPE_CHECKING:
+
+        @property
+        def entries(self) -> models.Manager["PlannedCourse"]: ...
+
     student = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="study_plan"
     )
@@ -90,6 +107,9 @@ class StudyPlan(models.Model):
 
 
 class PlannedCourse(models.Model):
+    if TYPE_CHECKING:
+        course_id: int
+
     plan = models.ForeignKey(StudyPlan, on_delete=models.CASCADE, related_name="entries")
     course = models.ForeignKey("courses.Course", on_delete=models.CASCADE)
     term = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(8)])

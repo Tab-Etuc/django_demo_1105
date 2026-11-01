@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
@@ -9,6 +11,10 @@ from courses.models import CourseOffering, overlapping_slots
 
 
 class Enrollment(models.Model):
+    if TYPE_CHECKING:
+        student_id: int
+        offering_id: int
+
     STATUS_CHOICES = [
         ("enrolled", "Enrolled"),
         ("dropped", "Dropped"),

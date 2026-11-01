@@ -1,5 +1,7 @@
 import json
+from collections.abc import Callable
 from functools import wraps
+from typing import Any
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError, OperationalError
@@ -33,7 +35,7 @@ class VersionConflict(Exception):
 
 
 def endpoint(*methods, roles=("student",)):
-    def decorate(view):
+    def decorate(view: Callable[..., dict[str, Any]]) -> Callable[..., JsonResponse]:
         @wraps(view)
         def invoke(request, *args, **kwargs):
             if request.method not in methods:

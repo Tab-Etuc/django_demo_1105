@@ -1,9 +1,13 @@
 from itertools import pairwise
+from typing import TYPE_CHECKING
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.db.models import Count, F, Q
+
+if TYPE_CHECKING:
+    from .academic import CoursePrerequisite
 
 
 def has_time_conflict(slots):
@@ -78,6 +82,15 @@ def validate_enrolled_slots(offering, slots):
 
 
 class Course(models.Model):
+    if TYPE_CHECKING:
+        teacher_id: int | None
+
+        @property
+        def offerings(self) -> models.Manager["CourseOffering"]: ...
+
+        @property
+        def prerequisite_links(self) -> models.Manager["CoursePrerequisite"]: ...
+
     code = models.CharField(max_length=20, unique=True)
     name = models.CharField(max_length=100)
     teacher = models.ForeignKey(
@@ -145,6 +158,17 @@ class Course(models.Model):
 
 
 class CourseOffering(models.Model):
+    if TYPE_CHECKING:
+        course_id: int
+        teacher_id: int | None
+
+        @property
+        def meetings(self) -> models.Manager["CourseMeeting"]: ...
+
+        enrolled_count: int
+
+        def get_day_of_week_display(self) -> str: ...
+
     DAYS_OF_WEEK = [
         (0, "Monday"),
         (1, "Tuesday"),
@@ -255,6 +279,11 @@ class CourseOffering(models.Model):
 
 
 class CourseMeeting(models.Model):
+    if TYPE_CHECKING:
+        offering_id: int
+
+        def get_day_of_week_display(self) -> str: ...
+
     offering = models.ForeignKey(CourseOffering, on_delete=models.CASCADE, related_name="meetings")
     day_of_week = models.IntegerField(choices=CourseOffering.DAYS_OF_WEEK)
     start_time = models.TimeField()

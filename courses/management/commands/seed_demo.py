@@ -89,7 +89,7 @@ def demo_course(
     credits,
     category,
     *,
-    term=1,
+    term: int | None = 1,
     area="",
     teacher=None,
     program_type="four_year",
