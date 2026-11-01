@@ -917,6 +917,33 @@ input::placeholder {
   gap: 5px;
   align-items: center;
 }
+.timetable-block[draggable="true"],
+.timetable-outside-list button[draggable="true"] { cursor: grab; }
+.timetable-block[draggable="true"]:active,
+.timetable-outside-list button[draggable="true"]:active { cursor: grabbing; }
+.course-remove-zone {
+  position: fixed;
+  z-index: 1000;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: min(440px, calc(100vw - 32px));
+  min-height: 72px;
+  padding: 16px;
+  border: 2px dashed #b74b44;
+  border-radius: 12px;
+  background: #fff4f2;
+  color: #9a302b;
+  box-shadow: 0 12px 36px #0002;
+  font-weight: 700;
+}
+@media (max-width: 700px) {
+  .course-remove-zone { bottom: 84px; }
+}
 .summary-total {
   display: flex;
   align-items: center;

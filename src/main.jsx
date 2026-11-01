@@ -97,12 +97,13 @@ function App() {
   const [preview, setPreview] = useState(null);
   const [generalArea, setGeneralArea] = useState("all");
   const [draggedPlan, setDraggedPlan] = useState(null);
+  const [draggedCourse, setDraggedCourse] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
   const mutationRef = useRef(false);
   const detailRequest = useRef(0);
   const refreshRequest = useRef(0);
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async ({ preserveTrial = false } = {}) => {
     const requestId = ++refreshRequest.current;
     setLoading(true);
     setLoadError("");
@@ -117,7 +118,7 @@ function App() {
       setCourses(catalog.courses || []);
       setPeriods(periodData.periods || []);
       setSelected(me.enrollments || []);
-      setTrial([]);
+      if (!preserveTrial) setTrial([]);
       setPlan(null);
       setPlanImpact(null);
     } catch (error) {
@@ -297,6 +298,16 @@ function App() {
       setBusy(false);
     }
   }
+  function removeDraggedCourse() {
+    if (!draggedCourse || busy) return;
+    if (draggedCourse.source === "trial") {
+      setTrial((old) => old.filter((item) => item.id !== draggedCourse.offering.id));
+    } else if (!draggedCourse.fixed) {
+      setDropTarget(draggedCourse);
+    }
+    setDraggedCourse(null);
+  }
+
   async function confirmTrial() {
     if (!trial.length) return;
     setBusy(true);
@@ -322,7 +333,7 @@ function App() {
         body: JSON.stringify({ offering_id: offeringId }),
       });
       setNotice({ type: "success", text: "已退選，課表已更新。" });
-      await refresh();
+      await refresh({ preserveTrial: true });
     } catch (error) {
       setNotice({ type: "error", text: error.message });
     } finally {
@@ -530,7 +541,23 @@ function App() {
   const minCredits = profile?.credits?.minimum ?? 16;
 
   return (
-    <div className={`app-shell ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}>
+    <div
+      className={`app-shell ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}
+      onDragOver={(event) => {
+        if (draggedCourse &&
+            !event.target.closest(".timetable-wrap") &&
+            event.dataTransfer.types.includes("application/x-schedule-course")) {
+          event.preventDefault();
+          event.dataTransfer.dropEffect = "move";
+        }
+      }}
+      onDrop={(event) => {
+        if (!draggedCourse || event.target.closest(".timetable-wrap")) return;
+        if (event.dataTransfer.getData("application/x-schedule-course") !== String(draggedCourse.offering.id)) return;
+        event.preventDefault();
+        removeDraggedCourse();
+      }}
+    >
       <a className="skip-link" href="#main-content">
         跳至主要內容
       </a>
@@ -932,6 +959,8 @@ function App() {
                     if (window.matchMedia("(max-width: 700px)").matches) setMobileTab("list");
                   }}
                   onDropCourse={addTrial}
+                  onDragCourse={setDraggedCourse}
+                  busy={busy}
                   onOpen={(item) =>
                     openCourse(
                       courses.find((c) => c.course.id === item.course.id) || {
@@ -944,7 +973,7 @@ function App() {
                 />
                 <div className="schedule-foot">
                   <span><Clock3 size={13} /> 點空白節次找課，按住拖曳可選連續時段</span>
-                  <span className="drag-hint">課程卡片亦可拖入課表試排</span>
+                  <span className="drag-hint">課程可拖入試排，也可拖出移除</span>
                   <button
                     className="mobile-open-list"
                     onClick={() => setMobileTab("list")}
@@ -1370,6 +1399,12 @@ function App() {
           onClose={() => setSwitchSource(null)}
           onConfirm={switchOffering}
         />
+      )}
+      {draggedCourse && page === "courses" && (
+        <div className="course-remove-zone" role="status">
+          <Trash2 size={20} />
+          {draggedCourse.source === "trial" ? "拖出課表放開，即可移除試排" : "拖出課表放開，即可退選"}
+        </div>
       )}
       {dropTarget && (
         <DropConfirm

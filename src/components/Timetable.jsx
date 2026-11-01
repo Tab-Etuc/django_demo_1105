@@ -4,7 +4,7 @@ import { spring } from "@animate-ui/react/utils/motion";
 import { LockKeyhole, ArrowDownUp, Check } from "lucide-react";
 import { DAYS, periodsFor, slotsText } from "@/lib/course-data";
 
-export function Timetable({ enrollments, periods, onDropCourse, onOpen, selectedTime, onSelectTime, preview, conflictIds = [] }) {
+export function Timetable({ enrollments, periods, onDropCourse, onDragCourse, busy, onOpen, selectedTime, onSelectTime, preview, conflictIds = [] }) {
   const [over, setOver] = useState(false);
   const [dragRange, setDragRange] = useState(null);
   const dragRef = useRef(null);
@@ -53,6 +53,12 @@ export function Timetable({ enrollments, periods, onDropCourse, onOpen, selected
   function cancelSelection() {
     dragRef.current = null;
     setDragRange(null);
+  }
+
+  function startCourseDrag(event, item) {
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("application/x-schedule-course", String(item.offering.id));
+    onDragCourse(item);
   }
 
   return (
@@ -144,6 +150,9 @@ export function Timetable({ enrollments, periods, onDropCourse, onOpen, selected
                   exit={{ opacity: 0, transition: { duration: 0.15 } }}
                   transition={spring.pop}
                   whileTap={{ scale: 0.97 }}
+                  draggable={!item.fixed && !busy}
+                  onDragStart={(event) => startCourseDrag(event, item)}
+                  onDragEnd={() => onDragCourse(null)}
                   onClick={() => onOpen(item)}
                   aria-label={`查看 ${item.course.name} ${slotsText(item.offering)}課程詳情`}
                 >
@@ -164,7 +173,10 @@ export function Timetable({ enrollments, periods, onDropCourse, onOpen, selected
           <strong>其他上課時段</strong>
           <div className="timetable-outside-list">
             {outsideGrid.map(({ item, slot }, index) => (
-              <button key={`${item.offering.id}-${index}`} type="button" onClick={() => onOpen(item)}>
+              <button key={`${item.offering.id}-${index}`} type="button" onClick={() => onOpen(item)}
+                draggable={Boolean(item.source && !item.fixed && !busy)}
+                onDragStart={(event) => startCourseDrag(event, item)}
+                onDragEnd={() => onDragCourse(null)}>
                 <span>{item.course.name}</span>
                 <small>週{DAYS[slot.day]} {slot.start}–{slot.end}</small>
               </button>
