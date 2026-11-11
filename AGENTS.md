@@ -2,7 +2,7 @@
 
 ## 環境
 
-- Python 3.14.7（`.python-version` 固定修補版本）、Django 6.1.2、SQLite，使用 `uv` 管理 Python 相依套件。安裝與同步時需使用 `3.14.7`，不可只指定 `3.14`。
+- Python 3.14.3（`.python-version` 固定修補版本）、Django 6.1.2、SQLite，使用 `uv` 管理 Python 相依套件；Windows 首次安裝時使用 `uv sync --python 3.14.3 --locked`。
 - React、Tailwind CSS 與 Vite；前端位於 `src/`，執行 `npm run build` 產生靜態檔。
 - Django 路由：React 頁面在 `/`、`/plans/`，登入在 `/accounts/login/`，其他功能使用 `/api/`。
 - 已移除舊版 HTML、Bootstrap、教師頁與管理後台；只維護現行 React 介面。

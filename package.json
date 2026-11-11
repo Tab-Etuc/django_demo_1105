@@ -1,7 +1,7 @@
 {
   "name": "django_demo_1027",
   "version": "1.0.0",
-  "description": "使用 Python 3.14.7、Django 6.1.2、React、Tailwind CSS 與 SQLite 建立的選課系統。",
+  "description": "使用 Python 3.14.3、Django 6.1.2、React、Tailwind CSS 與 SQLite 建立的選課系統。",
   "private": true,
   "type": "module",
   "scripts": {
