@@ -395,6 +395,44 @@ class DemoApiTests(TestCase):
         self.assertTrue(results["suggestions"])
         self.assertTrue(all(x["course"]["credits"] <= 2 for x in results["suggestions"]))
 
+    def test_preview_csrf_allows_local_origin_without_port(self):
+        browser = Client(enforce_csrf_checks=True, HTTP_HOST="127.0.0.1:8000")
+        browser.force_login(self.student)
+        browser.get("/api/me/")
+        csrf_token = browser.cookies["csrftoken"].value
+        payload = json.dumps({"offering_ids": [self.get_offering("101").pk]})
+
+        for origin in ("http://127.0.0.1", "http://localhost"):
+            with self.subTest(origin=origin):
+                response = browser.post(
+                    "/api/preview/",
+                    payload,
+                    content_type="application/json",
+                    HTTP_ORIGIN=origin,
+                    HTTP_X_CSRFTOKEN=csrf_token,
+                )
+                self.assertEqual(response.status_code, 200, response.content)
+
+        self.assertEqual(
+            browser.post(
+                "/api/preview/",
+                payload,
+                content_type="application/json",
+                HTTP_ORIGIN="http://malicious.example",
+                HTTP_X_CSRFTOKEN=csrf_token,
+            ).status_code,
+            403,
+        )
+        self.assertEqual(
+            browser.post(
+                "/api/preview/",
+                payload,
+                content_type="application/json",
+                HTTP_ORIGIN="http://127.0.0.1",
+            ).status_code,
+            403,
+        )
+
     def test_csrf_cookie_and_post_enforcement(self):
         c = Client(enforce_csrf_checks=True)
         c.force_login(self.student)

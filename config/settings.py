@@ -29,6 +29,11 @@ ALLOWED_HOSTS = (
 if not DEBUG and not ALLOWED_HOSTS:
     raise ImproperlyConfigured("DJANGO_ALLOWED_HOSTS is required outside development.")
 
+# In local development, requests forwarded from the default HTTP port can have
+# Origin: http://127.0.0.1 even when Django receives Host: 127.0.0.1:8000.
+# Trust only these exact loopback origins; CSRF tokens remain required.
+CSRF_TRUSTED_ORIGINS = ["http://127.0.0.1", "http://localhost"] if DEBUG else []
+
 SECURE_SSL_REDIRECT = not DEBUG
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG

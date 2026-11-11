@@ -93,6 +93,7 @@ uv run --locked python manage.py runserver 127.0.0.1:8000
 - **`uv`、`node` 或 `npm` 顯示「無法辨識」**：確認第一步已完成，關閉並重新開啟 PowerShell；仍無法執行則重新確認安裝與 PATH。
 - **出現 `getfullargspec() got an unexpected keyword argument 'annotation_format'` 或 Python 版本不相容**：先執行 `git pull` 更新版本設定，再執行 `uv sync --python 3.14.3 --locked`。這會依照新設定切換專案的 Python 環境。
 - **uv 顯示 `No download found for request: cpython-3.14.7-windows-x86_64-none`**：這是先前 README 指定了 Windows 無法透過 uv 下載的 3.14.7 造成的。更新專案後使用 `uv sync --python 3.14.3 --locked`；Windows 目前已驗證可安裝 3.14.3。
+- **`Forbidden (Origin checking failed - http://127.0.0.1 does not match any trusted origins.)`**：更新專案 `git pull` 後重新啟動 Django；開發模式已允許 `http://127.0.0.1` 和 `http://localhost` 的請求來源，CSRF Token 驗證仍會執行。請從 `http://127.0.0.1:8000/` 開啟網站，避免混用不同主機名稱或連接埠。
 - **PowerShell 顯示 `npm.ps1` 禁止執行指令碼**：使用上面的 `npm.cmd` 指令即可。
 - **已有 `db.sqlite3`**：不要刪除；`migrate` 會保留既有的選課資料。
 
