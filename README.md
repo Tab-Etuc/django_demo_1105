@@ -1,6 +1,6 @@
 # 大學選課系統
 
-使用 Python 3.14、Django 6.1、React、Tailwind CSS 與 SQLite 建立。
+使用 Python 3.14.7、Django 6.1.2、React、Tailwind CSS 與 SQLite 建立。
 
 ## 功能
 
@@ -11,7 +11,7 @@
 
 ## 本機啟動（Windows 10／11）
 
-**即使電腦完全沒裝 Python，或原本裝的是 Python 3.15，也可以照以下步驟啟動。** 專案固定使用 **Python 3.14.7 以上（不含 3.15）及 Django 6.1.2**。由 `uv` 管理專案專用的 Python 和套件，不必移除電腦上原有的 Python。
+**即使電腦完全沒裝 Python，或原本裝的是 Python 3.15，也可以照以下步驟啟動。** 專案預設使用 **Python 3.14.7 及 Django 6.1.2**（已釘選確切版本）。由 `uv` 管理專案專用的 Python 和套件，不必移除電腦上原有的 Python。
 
 ### 1. 安裝必要工具（每台電腦只要一次）
 
@@ -54,13 +54,13 @@ cd .\django_demo_1105
 ### 3. 建立正確版本的 Python 環境
 
 ```powershell
-uv python install 3.14
-uv sync --python 3.14 --locked
+uv python install 3.14.7
+uv sync --python 3.14.7 --locked
 uv run --locked python --version
 uv run --locked python -m django --version
 ```
 
-確認顯示 **Python 3.14.x（至少 3.14.7）** 和 **Django 6.1.2**。如果電腦原本使用 Python 3.15，`uv sync` 會切換專案的 `.venv` 到相容版本，其他專案的 Python 不受影響。
+確認顯示 **Python 3.14.7** 和 **Django 6.1.2**。`.python-version` 已固定為 `3.14.7`，`pyproject.toml` 也限制 Python 必須為 `>=3.14.7,<3.15`。即使電腦原本裝有 Python 3.14.3 或 3.15，`uv sync` 也會將專案 `.venv` 切換成 3.14.7，不影響其他專案的 Python。
 
 ### 4. 安裝並建置前端
 
@@ -81,7 +81,8 @@ uv run --locked python manage.py runserver 127.0.0.1:8000
 ### 常見問題
 
 - **`uv`、`node` 或 `npm` 顯示「無法辨識」**：確認第一步已完成，關閉並重新開啟 PowerShell；仍無法執行則重新確認安裝與 PATH。
-- **出現 `getfullargspec() got an unexpected keyword argument 'annotation_format'`**：代表專案可能仍使用 Python 3.15；在專案資料夾重新執行 `uv python install 3.14` 與 `uv sync --python 3.14 --locked`。
+- **出現 `getfullargspec() got an unexpected keyword argument 'annotation_format'`，或 `Python 3.14.3 is incompatible`**：先在專案資料夾執行 `uv python install 3.14.7`，再執行 `uv sync --python 3.14.7 --locked`。已安裝的 3.14.3 無須移除。
+- **uv 顯示找不到 Python 3.14.7 下載版本**：可能是 uv 過舊。若使用 winget 安裝，執行 `winget upgrade --id astral-sh.uv -e`；使用官方安裝腳本則執行 `uv self update`，重新開啟 PowerShell 後再試一次 `uv python install 3.14.7`。
 - **PowerShell 顯示 `npm.ps1` 禁止執行指令碼**：使用上面的 `npm.cmd` 指令即可。
 - **已有 `db.sqlite3`**：不要刪除；`migrate` 會保留既有的選課資料。
 
