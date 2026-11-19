@@ -1,3 +1,12 @@
+| 學號 | 姓名 |
+| --- | --- |
+| 11446010 | 何宗儒 |
+| 11446022 | 黃偉程 |
+| 11446025 | 古少洋 |
+| 11446027 | 金冠宏 |
+| 11446037 | 羅少希 |
+
+
 # 大學選課系統
 
 使用 Python 3.14.3、Django 6.1.2、React、Tailwind CSS 與 SQLite 建立。
@@ -9,16 +18,6 @@
 - 四年／二技修課規劃、跨學期拖曳、未通過與重修安排、畢業學分進度。
 - Session 登入、CSRF 保護；選課規則與資料寫入由 Django API 驗證。
 
-## 已下載過專案：快速修復版本錯誤
-
-若先前已安裝 Python 3.14.3，或看到 `Python 3.14.3 is incompatible` / `No download found for request: cpython-3.14.7-windows-x86_64-none`，在 **PowerShell 的專案資料夾** 執行以下指令即可，不必重裝 Python：
-
-```powershell
-git pull
-uv sync --python 3.14.3 --locked
-uv run --locked python manage.py migrate
-uv run --locked python manage.py runserver 127.0.0.1:8000
-```
 
 ## 本機啟動（Windows 10／11）
 
@@ -87,24 +86,6 @@ uv run --locked python manage.py runserver 127.0.0.1:8000
 ```
 
 開啟 **http://127.0.0.1:8000/**，在登入頁點「遊客」即可自動建立示範帳號及課程資料。也可手動執行 `uv run python manage.py seed_demo`。
-
-### 常見問題
-
-- **`uv`、`node` 或 `npm` 顯示「無法辨識」**：確認第一步已完成，關閉並重新開啟 PowerShell；仍無法執行則重新確認安裝與 PATH。
-- **出現 `getfullargspec() got an unexpected keyword argument 'annotation_format'` 或 Python 版本不相容**：先執行 `git pull` 更新版本設定，再執行 `uv sync --python 3.14.3 --locked`。這會依照新設定切換專案的 Python 環境。
-- **uv 顯示 `No download found for request: cpython-3.14.7-windows-x86_64-none`**：這是先前 README 指定了 Windows 無法透過 uv 下載的 3.14.7 造成的。更新專案後使用 `uv sync --python 3.14.3 --locked`；Windows 目前已驗證可安裝 3.14.3。
-- **`Forbidden (Origin checking failed - http://127.0.0.1 does not match any trusted origins.)`**：更新專案 `git pull` 後重新啟動 Django；開發模式已允許 `http://127.0.0.1` 和 `http://localhost` 的請求來源，CSRF Token 驗證仍會執行。請從 `http://127.0.0.1:8000/` 開啟網站，避免混用不同主機名稱或連接埠。
-- **PowerShell 顯示 `npm.ps1` 禁止執行指令碼**：使用上面的 `npm.cmd` 指令即可。
-- **已有 `db.sqlite3`**：不要刪除；`migrate` 會保留既有的選課資料。
-
-## 入口
-
-- `/`：React 選課與週課表
-- `/plans/`：React 修課規劃
-- `/accounts/login/`：React 登入
-- `/api/`：JSON API；`/api/timetable/?semester=115-1` 可查詢指定學期課表
-
-前端位於 `src/`，後端 API 位於 `courses/api.py`、`courses/plans.py`，選課規則位於 `courses/selection.py`。修改前端後執行 `npm run build`。
 
 ## 測試
 
